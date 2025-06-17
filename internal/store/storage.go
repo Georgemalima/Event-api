@@ -14,12 +14,12 @@ var (
 )
 
 type Storage struct {
-	Posts interface {
-		GetByID(context.Context, int64) (*Post, error)
-		Create(context.Context, *Post) error
+	Events interface {
+		GetByID(context.Context, int64) (*Event, error)
+		Create(context.Context, *sql.Tx, *Event) error
 		Delete(context.Context, int64) error
-		Update(context.Context, *Post) error
-		GetUserFeed(context.Context, int64, PaginatedFeedQuery) ([]PostWithMetadata, error)
+		Update(context.Context, *Event) error
+		GetAllEvents(context.Context, PaginatedFeedQuery) ([]Event, error)
 	}
 	Users interface {
 		GetByID(context.Context, int64) (*User, error)
@@ -29,14 +29,6 @@ type Storage struct {
 		Activate(context.Context, string) error
 		Delete(context.Context, int64) error
 	}
-	Comments interface {
-		Create(context.Context, *Comment) error
-		GetByPostID(context.Context, int64) ([]Comment, error)
-	}
-	Followers interface {
-		Follow(ctx context.Context, userID, followerID int64) error
-		Unfollow(ctx context.Context, followerID, userID int64) error
-	}
 	Roles interface {
 		GetByName(context.Context, string) (*Role, error)
 	}
@@ -44,11 +36,9 @@ type Storage struct {
 
 func NewStorage(db *sql.DB) Storage {
 	return Storage{
-		Posts:     &PostStore{db},
-		Users:     &UserStore{db},
-		Comments:  &CommentStore{db},
-		Followers: &FollowerStore{db},
-		Roles:     &RoleStore{db},
+		Events: &EventStore{db},
+		Users:  &UserStore{db},
+		Roles:  &RoleStore{db},
 	}
 }
 
