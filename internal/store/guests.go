@@ -69,7 +69,7 @@ func (s *GuestStore) GetGuests(ctx context.Context, eventId int64, fq PaginatedF
 	return guests, nil
 }
 
-func (s *GuestStore) GetByID(ctx context.Context, id int64, fq PaginatedFeedQuery) (*Guest, error) {
+func (s *GuestStore) GetByID(ctx context.Context, id int64) (*Guest, error) {
 	query := `
 		SELECT id, name, email, phone_number, status, type, card_id, event_id, created_at,  updated_at
 		FROM guests
