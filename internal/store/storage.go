@@ -21,6 +21,13 @@ type Storage struct {
 		Update(context.Context, *Event) error
 		GetAllEvents(context.Context, PaginatedFeedQuery) ([]Event, error)
 	}
+	Guests interface {
+		Create(ctx context.Context, tx *sql.Tx, guest *Guest) error
+		Delete(ctx context.Context, guestID int64) error
+		GetByID(ctx context.Context, id int64) (*Guest, error)
+		GetGuests(ctx context.Context, eventId int64, fq PaginatedFeedQuery) ([]Guest, error)
+		Update(ctx context.Context, tx *sql.Tx, guest *Guest) error
+	}
 	Users interface {
 		GetByID(context.Context, int64) (*User, error)
 		GetByEmail(context.Context, string) (*User, error)
@@ -29,6 +36,20 @@ type Storage struct {
 		Activate(context.Context, string) error
 		Delete(context.Context, int64) error
 	}
+	Cards interface {
+		Create(ctx context.Context, tx *sql.Tx, card *Card) error
+		Delete(ctx context.Context, cardID int64) error
+		GetByID(ctx context.Context, id int64) (*Card, error)
+		GetCards(ctx context.Context, eventId int64, fq PaginatedFeedQuery) ([]Card, error)
+		Update(ctx context.Context, tx *sql.Tx, card *Card) error
+	}
+	CardTemplates interface {
+		Create(ctx context.Context, tx *sql.Tx, card *CardTemplate) error
+		Delete(ctx context.Context, cardID int64) error
+		GetByID(ctx context.Context, id int64) (*CardTemplate, error)
+		GetCards(ctx context.Context, eventId int64, fq PaginatedFeedQuery) ([]CardTemplate, error)
+		Update(ctx context.Context, tx *sql.Tx, card *CardTemplate) error
+	}
 	Roles interface {
 		GetByName(context.Context, string) (*Role, error)
 	}
@@ -36,9 +57,12 @@ type Storage struct {
 
 func NewStorage(db *sql.DB) Storage {
 	return Storage{
-		Events: &EventStore{db},
-		Users:  &UserStore{db},
-		Roles:  &RoleStore{db},
+		Events:        &EventStore{db},
+		Guests:        &GuestStore{db},
+		Users:         &UserStore{db},
+		Cards:         &CardStore{db},
+		CardTemplates: &CardTemplateStore{db},
+		Roles:         &RoleStore{db},
 	}
 }
 
