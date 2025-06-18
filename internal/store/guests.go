@@ -18,6 +18,7 @@ type Guest struct {
 	CardID      int64  `json:"card_id"`
 	EventID     int64  `json:"event_id"`
 	Event       Event  `json:"event"`
+	Card        Card   `json:"card"`
 }
 
 type GuestStore struct {
@@ -25,8 +26,47 @@ type GuestStore struct {
 }
 
 func (s *GuestStore) GetGuests(ctx context.Context, eventId int64, fq PaginatedFeedQuery) ([]Guest, error) {
-	// to implement
-	return nil, nil
+	query := `
+		SELECT
+			gs.id, gs.name, gs.email, gs.phone_number, gs.status, gs.type
+		FROM guests gs
+		LEFT JOIN cards c ON c.id = gs.card_id
+		WHERE gs.event_id = $1 AND
+			(gs.name ILIKE '%' || $4 || '%' OR gs.phone_number ILIKE '%' || $4 || '%')
+		GROUP BY gs.id, gs.name
+		ORDER BY gs.created_at ` + fq.Sort + `
+		LIMIT $2 OFFSET $3
+	`
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	rows, err := s.db.QueryContext(ctx, query, fq.Limit, fq.Offset, fq.Search)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var guests []Guest
+	for rows.Next() {
+		var g Guest
+		err := rows.Scan(
+			&g.ID,
+			&g.Name,
+			&g.Email,
+			&g.PhoneNumber,
+			&g.Status,
+			&g.Type,
+			&g.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		guests = append(guests, g)
+	}
+
+	return guests, nil
 }
 
 func (s *GuestStore) GetByID(ctx context.Context, id int64, fq PaginatedFeedQuery) (*Guest, error) {

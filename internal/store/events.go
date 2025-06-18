@@ -71,34 +71,6 @@ func (s *EventStore) GetAllEvents(ctx context.Context, fq PaginatedFeedQuery) ([
 	return events, nil
 }
 
-func (s *EventStore) Create(ctx context.Context, tx *sql.Tx, event *Event) error {
-	query := `
-		INSERT INTO events (name, date, location, user_id)
-		VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at
-	`
-
-	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
-	defer cancel()
-
-	err := s.db.QueryRowContext(
-		ctx,
-		query,
-		event.Name,
-		event.Date,
-		event.Location,
-		event.UserID,
-	).Scan(
-		&event.ID,
-		&event.CreatedAt,
-		&event.UpdatedAt,
-	)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (s *EventStore) GetByID(ctx context.Context, id int64) (*Event, error) {
 	query := `
 		SELECT id, name, date, location, scanned_count, card_template_id, user_id, created_at,  updated_at
@@ -131,6 +103,34 @@ func (s *EventStore) GetByID(ctx context.Context, id int64) (*Event, error) {
 	}
 
 	return &event, nil
+}
+
+func (s *EventStore) Create(ctx context.Context, tx *sql.Tx, event *Event) error {
+	query := `
+		INSERT INTO events (name, date, location, user_id)
+		VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	err := s.db.QueryRowContext(
+		ctx,
+		query,
+		event.Name,
+		event.Date,
+		event.Location,
+		event.UserID,
+	).Scan(
+		&event.ID,
+		&event.CreatedAt,
+		&event.UpdatedAt,
+	)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *EventStore) Delete(ctx context.Context, eventID int64) error {
