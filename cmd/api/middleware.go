@@ -93,12 +93,12 @@ func (app *application) BasicAuthMiddleware() func(http.Handler) http.Handler {
 	}
 }
 
-func (app *application) checkPostOwnership(requiredRole string, next http.HandlerFunc) http.HandlerFunc {
+func (app *application) checkEventOwnership(requiredRole string, next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := getUserFromContext(r)
-		post := getPostFromCtx(r)
+		event := getEventFromCtx(r)
 
-		if post.UserID == user.ID {
+		if event.UserID == user.ID {
 			next.ServeHTTP(w, r)
 			return
 		}

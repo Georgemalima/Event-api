@@ -63,32 +63,32 @@ func (app *application) getUserHandler(w http.ResponseWriter, r *http.Request) {
 //	@Failure		404		{object}	error	"User not found"
 //	@Security		ApiKeyAuth
 //	@Router			/users/{userID}/follow [put]
-func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request) {
-	followerUser := getUserFromContext(r)
+// func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request) {
+// 	followerUser := getUserFromContext(r)
 
-	followedID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
-	if err != nil {
-		app.badRequestResponse(w, r, err)
-		return
-	}
+// 	followedID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
+// 	if err != nil {
+// 		app.badRequestResponse(w, r, err)
+// 		return
+// 	}
 
-	ctx := r.Context()
+// 	ctx := r.Context()
 
-	if err := app.store.Followers.Follow(ctx, followedID, followerUser.ID); err != nil {
-		switch err {
-		case store.ErrConflict:
-			app.conflictResponse(w, r, err)
-			return
-		default:
-			app.internalServerError(w, r, err)
-			return
-		}
-	}
+// 	if err := app.store.Followers.Follow(ctx, followedID, followerUser.ID); err != nil {
+// 		switch err {
+// 		case store.ErrConflict:
+// 			app.conflictResponse(w, r, err)
+// 			return
+// 		default:
+// 			app.internalServerError(w, r, err)
+// 			return
+// 		}
+// 	}
 
-	if err := app.jsonResponse(w, http.StatusNoContent, nil); err != nil {
-		app.internalServerError(w, r, err)
-	}
-}
+// 	if err := app.jsonResponse(w, http.StatusNoContent, nil); err != nil {
+// 		app.internalServerError(w, r, err)
+// 	}
+// }
 
 // UnfollowUser gdoc
 //
@@ -103,25 +103,25 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 //	@Failure		404		{object}	error	"User not found"
 //	@Security		ApiKeyAuth
 //	@Router			/users/{userID}/unfollow [put]
-func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Request) {
-	followerUser := getUserFromContext(r)
+// func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Request) {
+// 	followerUser := getUserFromContext(r)
 
-	unfollowedID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
-	if err != nil {
-		app.badRequestResponse(w, r, err)
-		return
-	}
-	ctx := r.Context()
+// 	unfollowedID, err := strconv.ParseInt(chi.URLParam(r, "userID"), 10, 64)
+// 	if err != nil {
+// 		app.badRequestResponse(w, r, err)
+// 		return
+// 	}
+// 	ctx := r.Context()
 
-	if err := app.store.Followers.Unfollow(ctx, followerUser.ID, unfollowedID); err != nil {
-		app.internalServerError(w, r, err)
-		return
-	}
+// 	if err := app.store.Followers.Unfollow(ctx, followerUser.ID, unfollowedID); err != nil {
+// 		app.internalServerError(w, r, err)
+// 		return
+// 	}
 
-	if err := app.jsonResponse(w, http.StatusNoContent, nil); err != nil {
-		app.internalServerError(w, r, err)
-	}
-}
+// 	if err := app.jsonResponse(w, http.StatusNoContent, nil); err != nil {
+// 		app.internalServerError(w, r, err)
+// 	}
+// }
 
 // ActivateUser godoc
 //

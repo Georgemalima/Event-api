@@ -164,6 +164,33 @@ func (app *application) updateEventHandler(w http.ResponseWriter, r *http.Reques
 	}
 }
 
+func (app *application) eventsContextMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		idParam := chi.URLParam(r, "eventID")
+		id, err := strconv.ParseInt(idParam, 10, 64)
+		if err != nil {
+			app.internalServerError(w, r, err)
+			return
+		}
+
+		ctx := r.Context()
+
+		post, err := app.store.Events.GetByID(ctx, id)
+		if err != nil {
+			switch {
+			case errors.Is(err, store.ErrNotFound):
+				app.notFoundResponse(w, r, err)
+			default:
+				app.internalServerError(w, r, err)
+			}
+			return
+		}
+
+		ctx = context.WithValue(ctx, eventCtx, post)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
 func getEventFromCtx(r *http.Request) *store.Event {
 	event, _ := r.Context().Value(eventCtx).(*store.Event)
 	return event

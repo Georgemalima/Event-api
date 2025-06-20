@@ -105,7 +105,7 @@ func (s *EventStore) GetByID(ctx context.Context, id int64) (*Event, error) {
 	return &event, nil
 }
 
-func (s *EventStore) Create(ctx context.Context, tx *sql.Tx, event *Event) error {
+func (s *EventStore) Create(ctx context.Context, event *Event) error {
 	query := `
 		INSERT INTO events (name, date, location, user_id)
 		VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at

@@ -7,14 +7,15 @@ import (
 )
 
 type Card struct {
-	ID        int64  `json:"id"`
-	ImagePath string `json:"image_path"`
-	EventID   int64  `json:"event_id"`
-	GuestID   int64  `json:"guest_id"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
-	Guest     *Guest `json:"guest"`
-	Event     Event  `json:"event"`
+	ID             int64  `json:"id"`
+	ImagePath      string `json:"image_path"`
+	EventID        int64  `json:"event_id"`
+	GuestID        int64  `json:"guest_id"`
+	CardTemplateID int64  `json:"card_template_id"`
+	CreatedAt      string `json:"created_at"`
+	UpdatedAt      string `json:"updated_at"`
+	Guest          *Guest `json:"guest"`
+	Event          Event  `json:"event"`
 }
 type CardStore struct {
 	db *sql.DB
@@ -65,7 +66,7 @@ func (s *CardStore) GetCards(ctx context.Context, eventId int64, fq PaginatedFee
 
 func (s *CardStore) GetByID(ctx context.Context, id int64) (*Card, error) {
 	query := `
-		SELECT id, image_path, guest_id, created_at,  updated_at,
+		SELECT id, image_path, guest_id, card_template_id, created_at,  updated_at,
 			gs.name, gs.phone_number
 		FROM cards c
 		LEFT JOIN guests gs ON gs.id = c.guest_id
@@ -80,6 +81,7 @@ func (s *CardStore) GetByID(ctx context.Context, id int64) (*Card, error) {
 		&card.ID,
 		&card.ImagePath,
 		&card.GuestID,
+		&card.CardTemplateID,
 		&card.CreatedAt,
 		&card.UpdatedAt,
 		&card.Guest.Name,
@@ -97,10 +99,10 @@ func (s *CardStore) GetByID(ctx context.Context, id int64) (*Card, error) {
 	return &card, nil
 }
 
-func (s *CardStore) Create(ctx context.Context, tx *sql.Tx, card *Card) error {
+func (s *CardStore) Create(ctx context.Context, card *Card) error {
 	query := `
-		INSERT INTO cards (event_id, guest_id, image_path)
-		VALUES ($1, $2, $3) RETURNING id, created_at, updated_at
+		INSERT INTO cards (event_id, guest_id, card_template_id, image_path)
+		VALUES ($1, $2, $3, $4) RETURNING id, created_at, updated_at
 	`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
@@ -111,6 +113,7 @@ func (s *CardStore) Create(ctx context.Context, tx *sql.Tx, card *Card) error {
 		query,
 		card.EventID,
 		card.GuestID,
+		card.CardTemplateID,
 		card.ImagePath,
 	).Scan(
 		&card.ID,
@@ -150,7 +153,7 @@ func (s *CardStore) Delete(ctx context.Context, cardID int64) error {
 func (s *CardStore) Update(ctx context.Context, tx *sql.Tx, card *Card) error {
 	query := `
 		UPDATE cards
-		SET event_id = $1, guest_id = $2, image_path = $3
+		SET event_id = $1, guest_id = $2, card_template_id = $3, image_path = $4
 		WHERE id = $4
 		RETURNING id, created_at, updated_at
 	`
@@ -163,6 +166,7 @@ func (s *CardStore) Update(ctx context.Context, tx *sql.Tx, card *Card) error {
 		query,
 		card.EventID,
 		card.GuestID,
+		card.CardTemplateID,
 		card.ImagePath,
 	).Scan(
 		&card.ID,

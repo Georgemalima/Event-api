@@ -16,7 +16,7 @@ var (
 type Storage struct {
 	Events interface {
 		GetByID(context.Context, int64) (*Event, error)
-		Create(context.Context, *sql.Tx, *Event) error
+		Create(context.Context, *Event) error
 		Delete(context.Context, int64) error
 		Update(context.Context, *Event) error
 		GetAllEvents(context.Context, PaginatedFeedQuery) ([]Event, error)
@@ -37,7 +37,7 @@ type Storage struct {
 		Delete(context.Context, int64) error
 	}
 	Cards interface {
-		Create(ctx context.Context, tx *sql.Tx, card *Card) error
+		Create(ctx context.Context, card *Card) error
 		Delete(ctx context.Context, cardID int64) error
 		GetByID(ctx context.Context, id int64) (*Card, error)
 		GetCards(ctx context.Context, eventId int64, fq PaginatedFeedQuery) ([]Card, error)
