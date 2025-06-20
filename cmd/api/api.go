@@ -108,7 +108,7 @@ func (app *application) mount() http.Handler {
 		AllowCredentials: false,
 		MaxAge:           300, // Maximum value not ignored by any of major browsers
 	}))
-	
+
 	if app.config.rateLimiter.Enabled {
 		r.Use(app.RateLimiterMiddleware)
 	}
@@ -126,16 +126,26 @@ func (app *application) mount() http.Handler {
 		docsURL := fmt.Sprintf("%s/swagger/doc.json", app.config.addr)
 		r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsURL)))
 
-		r.Route("/posts", func(r chi.Router) {
+		r.Route("/events", func(r chi.Router) {
 			r.Use(app.AuthTokenMiddleware)
-			r.Post("/", app.createPostHandler)
+			r.Post("/create", app.createEventHandler)
+			r.Get("/", app.getAllEventsHandler)
 
-			r.Route("/{postID}", func(r chi.Router) {
+			r.Route("/{eventID}", func(r chi.Router) {
 				r.Use(app.postsContextMiddleware)
-				r.Get("/", app.getPostHandler)
+				r.Get("/", app.getEventHandler)
 
-				r.Patch("/", app.checkPostOwnership("moderator", app.updatePostHandler))
-				r.Delete("/", app.checkPostOwnership("admin", app.deletePostHandler))
+				r.Patch("/", app.checkEventOwnership("admin", app.updatePostHandler))
+				r.Delete("/", app.checkEventOwnership("admin", app.deletePostHandler))
+			})
+		})
+
+		r.Route("/guests", func(r chi.Router) {
+			r.Use(app.AuthTokenMiddleware)
+			r.Get("/event/{eventID}", app.getEventGuestsHandler)
+
+			r.Route("/{guestID}", func(r chi.Router) {
+				r.Delete("/", app.checkEventOwnership("admin", app.deleteGuestHandler))
 			})
 		})
 
@@ -146,8 +156,8 @@ func (app *application) mount() http.Handler {
 				r.Use(app.AuthTokenMiddleware)
 
 				r.Get("/", app.getUserHandler)
-				r.Put("/follow", app.followUserHandler)
-				r.Put("/unfollow", app.unfollowUserHandler)
+				// r.Put("/follow", app.followUserHandler)
+				// r.Put("/unfollow", app.unfollowUserHandler)
 			})
 
 			r.Group(func(r chi.Router) {
