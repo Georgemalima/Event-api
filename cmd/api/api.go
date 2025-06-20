@@ -126,20 +126,28 @@ func (app *application) mount() http.Handler {
 		docsURL := fmt.Sprintf("%s/swagger/doc.json", app.config.addr)
 		r.Get("/swagger/*", httpSwagger.Handler(httpSwagger.URL(docsURL)))
 
+		// cards route
+		r.Route("/cards", func(r chi.Router) {
+			r.Use(app.AuthTokenMiddleware)
+			r.Post("/create", app.createCardHandler)
+		})
+
+		//events route
 		r.Route("/events", func(r chi.Router) {
 			r.Use(app.AuthTokenMiddleware)
 			r.Post("/create", app.createEventHandler)
 			r.Get("/", app.getAllEventsHandler)
 
 			r.Route("/{eventID}", func(r chi.Router) {
-				r.Use(app.postsContextMiddleware)
+				r.Use(app.eventsContextMiddleware)
 				r.Get("/", app.getEventHandler)
 
-				r.Patch("/", app.checkEventOwnership("admin", app.updatePostHandler))
-				r.Delete("/", app.checkEventOwnership("admin", app.deletePostHandler))
+				r.Patch("/", app.checkEventOwnership("admin", app.updateEventHandler))
+				r.Delete("/", app.checkEventOwnership("admin", app.deleteEventHandler))
 			})
 		})
 
+		// guests route
 		r.Route("/guests", func(r chi.Router) {
 			r.Use(app.AuthTokenMiddleware)
 			r.Get("/event/{eventID}", app.getEventGuestsHandler)
@@ -149,6 +157,7 @@ func (app *application) mount() http.Handler {
 			})
 		})
 
+		// users route
 		r.Route("/users", func(r chi.Router) {
 			r.Put("/activate/{token}", app.activateUserHandler)
 
@@ -160,10 +169,10 @@ func (app *application) mount() http.Handler {
 				// r.Put("/unfollow", app.unfollowUserHandler)
 			})
 
-			r.Group(func(r chi.Router) {
-				r.Use(app.AuthTokenMiddleware)
-				r.Get("/feed", app.getUserFeedHandler)
-			})
+			// r.Group(func(r chi.Router) {
+			// 	r.Use(app.AuthTokenMiddleware)
+			// 	r.Get("/feed", app.getUserFeedHandler)
+			// })
 		})
 
 		// Public routes
